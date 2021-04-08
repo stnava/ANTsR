@@ -1,4 +1,4 @@
-FROM ubuntu:bionic-20200713
+FROM ubuntu:focal-20201008
 
 # Default to build latest version
 ARG antsr_version="HEAD" 
@@ -29,7 +29,7 @@ RUN apt-get update && \
 # https://cran.r-project.org/bin/linux/ubuntu/README.html
 COPY ubuntuRKey.txt /opt
 
-RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/" >> /etc/apt/sources.list && \
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" >> /etc/apt/sources.list && \
     apt-key add /opt/ubuntuRKey.txt && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -38,16 +38,15 @@ RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/" >> /e
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN Rscript -e "install.packages(\"devtools\", repos = \"https://cloud.r-project.org\", dependencies = T)" \
-            -e "library(devtools)" \
-            -e "install_github(\"stnava/cmaker\")"
-# Saves build time but can merge these layers once build is stable
-#
 # The warnings variable is needed to suppress warnings from tcltk that turn into an
 # error about not finding DISPLAY
 #
-# Also suppresses missing dependencies
-RUN R_REMOTES_NO_ERRORS_FROM_WARNINGS=true Rscript -e "library(devtools)" \
+# Also suppresses missing dependency errors
+RUN R_REMOTES_NO_ERRORS_FROM_WARNINGS=true Rscript \
+            -e "install.packages(\"devtools\", repos = \"https://cloud.r-project.org\", dependencies = T)" \
+            -e "library(devtools)" \
+            -e "install_github(\"stnava/cmaker\")" \
+            -e "library(devtools)" \
             -e "install_github(\"cran/ifultools\")" \
             -e "install_github(\"ANTsX/ANTsR\", ref=\"${antsr_version}\", dependencies=${antsr_dependencies})"
 
